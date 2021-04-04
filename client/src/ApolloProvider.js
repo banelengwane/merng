@@ -2,33 +2,26 @@ import React from 'react';
 import App from './App';
 
 import { InMemoryCache, createHttpLink, ApolloProvider, ApolloClient } from '@apollo/client';
+import { setContext } from 'apollo-link-context'
 
 const httpLink = createHttpLink({
-    uri: 'http://localhost:5000/'
+    uri: 'http://localhost:5000'
 });
 
-const defaultOptions = {
-    watchQuery: {
-        fetchPolicy: 'cache-and-network',
-        errorPolicy: 'ignore',
-    },
-    query: {
-        fetchPolicy: 'network-only',
-        errorPolicy: 'all',
-    },
-    mutate: {
-        errorPolicy: 'all',
-    },
-};
+const authLink = setContext(() => {
+    const token = localStorage.getItem('jwtToken');
+    return{
+        headers:{
+            Athorization: token ? `Bearer ${token}` : ''
+        }
+    }
+})
 
-const client = ApolloClient({
-    link: httpLink,
+const client = new ApolloClient({
+    link: authLink.concat(httpLink),
     cache: new InMemoryCache(),
-    // Provide some optional constructor fields
-    name: 'react-web-client',
-    version: '1.3',
-    queryDeduplication: false
 });
+
 
 export default (
     <ApolloProvider client={client}>
